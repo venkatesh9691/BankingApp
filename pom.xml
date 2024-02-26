@@ -47,16 +47,5 @@
 			</plugin>
 		</plugins>
 	</build>
-	<distributionManagement>
-		 <snapshotRepository>
-		    <id>nexusRepo</id>
-		    <url://1>http://16.16.107.234:8081/repository/raju/</url>
-		 </snapshotRepository>
-		
-		<repository>
-		    <id>nexusRepo</id>
-		    <url>http://16.16.107.234:8081/repository/raju/</url>
-		</repository>
-  	</distributionManagement>
 
 </project>
