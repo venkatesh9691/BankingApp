@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: bankapp-eta-container
-        image: venkatesh9691/venkatesh-projects-new
+        image: venkatesh9691/app
         ports:
         - containerPort: 8082
 ---
