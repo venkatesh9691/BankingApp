@@ -1,4 +1,4 @@
-pipeline {
+/*pipeline {
     agent { label 'jappbuildserver1' }	
 
     tools {
@@ -51,5 +51,92 @@ pipeline {
 		       }
             }
     	}
+    }
+}
+*/
+
+
+pipeline {
+    agent any
+    
+    tools{
+        jdk'jkd8'
+        jdk'jdk17'
+        maven'maven3'
+    }
+
+    stages {
+        stage('Git Cloning') {
+            steps {
+                git 'https://github.com/venkatesh9691/BankingApp.git'
+            }
+        }
+        stage("Maven compiling"){
+            steps{
+                sh'mvn compile'
+            }
+        }
+        stage("Maven Testing"){
+            steps{
+                sh'mvn test'
+            }
+        }
+        stage("OWASP Dependency Checking"){
+            steps{
+                dependencyCheck additionalArguments: ' --scan ./', odcInstallation: 'DC'
+                dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+            }
+        }
+        stage("file system scanning"){
+            steps{
+	            sh'trivy fs --format table -o trivy-fs-report.html .'
+            }
+        }
+        stage("Maven Build"){
+            steps{
+                sh'mvn clean package'
+            }
+        }
+        stage("Nexus Artifact"){
+            steps{
+                nexusArtifactUploader artifacts: [
+                    [
+                        artifactId: 'spring-boot-starter-parent',
+                        classifier: '',
+                        file: 'target/banking-0.0.1-SNAPSHOT.jar',
+                        type: 'jar'
+                    ]
+                ],
+                credentialsId: 'nexus',
+                groupId: 'com.project.staragile',
+                nexusUrl: '16.16.74.54:8081',
+                nexusVersion: 'nexus3',
+                protocol: 'http',
+                repository: 'venkat',
+                version: '0.0.1-SNAPSHOT'
+            }
+        }
+        stage('Build Docker Image'){
+            steps{
+                sh'docker stop s4'
+                sh 'docker rm s4'
+                sh 'docker build -t venkatesh9691/venkatesh-projects-new .'
+                sh 'docker build -t tomcat:${BUILD_NUMBER} .'
+                sh 'docker run -itd --name s4 -p 3800:8080 tomcat:${BUILD_NUMBER}'
+            }
+        }
+        stage("Docker image scaning"){
+            steps{
+                sh'trivy image --format table -o trivy-fs-report.html venkatesh9691/venkatesh-projects-new'
+            }
+        }
+        stage("push to Docker Hub"){
+            steps{
+                withCredentials([usernameColonPassword(credentialsId: 'DOCKER_HUB_CREDENTIALS', variable: 'DOCKER_HUB_CREDENTIALS')]) {
+                    sh'docker login -u ${DOCKER_HUB_CREDENTIALS} -p ${DOCKER_HUB_CREDENTIALS}'
+                }
+                sh 'docker push venkatesh9691/venkatesh-projects-new'
+            }
+        }
     }
 }
