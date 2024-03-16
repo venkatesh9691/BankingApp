@@ -130,13 +130,19 @@ pipeline {
                 sh'trivy image --format table -o trivy-fs-report.html venkatesh9691/venkatesh-projects-new'
             }
         }
-        stage("push to Docker Hub"){
+	stage("deploy to kubernetes"){
+	    steps{
+		    kubernetesDeploy configs: 'kubernetesdeploy.yaml', kubeConfig: [path: ''], kubeconfigId: 'Kubeconfigs', secretName: '', ssh: [sshCredentialsId: '*', sshServer: ''], textCredentials: [certificateAuthorityData: '', clientCertificateData: '', clientKeyData: '', serverUrl: 'https://']
+	    }
+	}
+	    
+       /* stage("push to Docker Hub"){
             steps{
                 withCredentials([usernameColonPassword(credentialsId: 'DOCKER_HUB_CREDENTIALS', variable: 'DOCKER_HUB_CREDENTIALS')]) {
                     sh'docker login -u ${DOCKER_HUB_CREDENTIALS} -p ${DOCKER_HUB_CREDENTIALS}'
                 }
                 sh 'docker push venkatesh9691/venkatesh-projects-new'
             }
-        }
+        }*/
     }
 }
